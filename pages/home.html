@@ -1,48 +1,749 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <script src="https://kit.fontawesome.com/2ec87f2ee1.js" crossorigin="anonymous"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/styles/style.css">
-    <link rel="apple-touch-icon" sizes="180x180" href="/styles/Favicon/apple-touch-icon copy.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/styles/Favicon/favicon-32x32 copy.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/styles/Favicon/favicon-16x16 copy.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/styles/Favicon/android-chrome-192x192 copy.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/styles/Favicon/android-chrome-512x512 copy.png">
     <title>Notemoon</title>
-</head>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            color: #4a6fa5;
+            margin-bottom: 10px;
+        }
+
+        .app-main {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        .books-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #4a6fa5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .add-book-btn {
+            background: none;
+            border: none;
+            color: #4a6fa5;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .books-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .book-item {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .book-item:hover {
+            background-color: #f0f5ff;
+        }
+
+        .book-item.active {
+            background-color: #e0ebff;
+            font-weight: bold;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        .btn-icon:hover {
+            color: #4a6fa5;
+        }
+
+        .notes-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .note-creation {
+            margin-bottom: 30px;
+        }
+
+        .note-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #note-content {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            font-size: 1rem;
+        }
+
+        .editor-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .book-selector {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #3a5a8a;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .note-card {
+            background-color: #fff9e6;
+            border-left: 4px solid #ffd166;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .note-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .note-date {
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        .note-content {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .note-book {
+            font-size: 0.8rem;
+            color: #4a6fa5;
+            font-style: italic;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #777;
+        }
+
+        #book-name {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .app-main {
+                grid-template-columns: 1fr;
+            }
+            
+            .editor-actions {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .book-selector {
+                width: 100%;
+            }
+
+            .btn-primary {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
 <body>
-    <h3>NoteMoon</h3>
-    
-    <div class="div--principal">
-        <header>
-            <div>
-                <button id="btn--selecionar--categoria">Buscar</button>
-                <input id="input--selecionar--categoria" type="text" placeholder="Palavra chave">
-            </div>
+    <div class="app-container">
+        <header class="app-header">
+            <h1 class="logo">NoteMoon</h1>
         </header>
-        <div class="divDasNotas">
-            <div id="nota--apresentacao">
-                <!-- NOTA DE CRIAÇÃO DE NOTAS -->
-                <div class="nota">
-                    <div class="btn--apresentacao">
-                        <div class="btn" onclick="criaNota()"><i class="fa-solid fa-envelope"></i></div>
-                    </div>
-                    <textarea id="textArea" placeholder="Digite algo..."></textarea>
-                </div>
-    
-                <div id="local--notas">
-                    <!-- NOTAS -->
         
+        <main class="app-main">
+            <section class="books-section">
+                <h2 class="section-title">
+                    Seus Livros
+                    <button class="add-book-btn" id="add-book-btn" aria-label="Adicionar novo livro">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </h2>
+                <ul class="books-list" id="books-list">
+                    <!-- Livros serão inseridos aqui via JavaScript -->
+                </ul>
+            </section>
+            
+            <section class="notes-section">
+                <div class="note-creation">
+                    <div class="note-editor">
+                        <textarea 
+                            id="note-content" 
+                            placeholder="Digite sua nota aqui..."
+                            aria-label="Conteúdo da nota"
+                        ></textarea>
+                        <div class="editor-actions">
+                            <select id="book-selector" class="book-selector">
+                                <!-- Opções de livros serão inseridas aqui via JavaScript -->
+                            </select>
+                            <button 
+                                id="create-note" 
+                                class="btn-primary"
+                                aria-label="Criar nova nota"
+                            >
+                                <i class="fa-solid fa-plus"></i> Criar Nota
+                            </button>
+                        </div>
+                    </div>
                 </div>
+                
+                <h2 class="section-title">Suas Notas</h2>
+                <div id="notes-container" class="notes-grid">
+                    <!-- As notas serão inseridas aqui via JavaScript -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal para adicionar novo livro -->
+    <div class="modal" id="book-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Adicionar Novo Livro</h3>
+                <button class="close-modal" id="close-modal">&times;</button>
             </div>
+            <input 
+                type="text" 
+                id="book-name" 
+                placeholder="Nome do livro"
+                aria-label="Nome do livro"
+            >
+            <button id="save-book" class="btn-primary">Salvar Livro</button>
         </div>
     </div>
 
-    <script src="/scripts/home.js"></script>
-</body>
+    <script>
+        // Constantes e configuração
+        const STORAGE_KEY = 'NOTEMOON_DATA';
 
+        // Elementos da DOM
+        const DOM = {
+            notesContainer: document.getElementById('notes-container'),
+            noteContent: document.getElementById('note-content'),
+            createNoteButton: document.getElementById('create-note'),
+            booksList: document.getElementById('books-list'),
+            bookSelector: document.getElementById('book-selector'),
+            addBookBtn: document.getElementById('add-book-btn'),
+            bookModal: document.getElementById('book-modal'),
+            closeModal: document.getElementById('close-modal'),
+            saveBookBtn: document.getElementById('save-book'),
+            bookNameInput: document.getElementById('book-name')
+        };
+
+        // Gerenciamento de dados
+        const DataManager = {
+            // Obter dados do localStorage
+            getData: () => {
+                try {
+                    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+                        books: [{ id: 'default', name: 'Notas Gerais' }],
+                        notes: [],
+                        currentBook: 'default'
+                    };
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    return {
+                        books: [{ id: 'default', name: 'Notas Gerais' }],
+                        notes: [],
+                        currentBook: 'default'
+                    };
+                }
+            },
+            
+            // Salvar dados no localStorage
+            saveData: (data) => {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao salvar dados:', error);
+                    return false;
+                }
+            },
+            
+            // Adicionar um novo livro
+            addBook: (name) => {
+                if (!name || !name.trim()) {
+                    alert("Por favor, digite um nome para o livro");
+                    return false;
+                }
+                
+                const data = DataManager.getData();
+                const newBook = {
+                    id: Date.now().toString(),
+                    name: name.trim()
+                };
+                
+                data.books.push(newBook);
+                return DataManager.saveData(data);
+            },
+            
+            // Remover um livro
+            removeBook: (id) => {
+                if (id === 'default') {
+                    alert("Não é possível remover o livro 'Notas Gerais'");
+                    return false;
+                }
+                
+                const data = DataManager.getData();
+                
+                // Remover o livro
+                data.books = data.books.filter(book => book.id !== id);
+                
+                // Mover notas para o livro padrão se estiver removendo o livro atual
+                if (data.currentBook === id) {
+                    data.notes = data.notes.map(note => {
+                        if (note.bookId === id) {
+                            return {...note, bookId: 'default'};
+                        }
+                        return note;
+                    });
+                    data.currentBook = 'default';
+                } else {
+                    // Mover notas para o livro padrão
+                    data.notes = data.notes.map(note => {
+                        if (note.bookId === id) {
+                            return {...note, bookId: 'default'};
+                        }
+                        return note;
+                    });
+                }
+                
+                return DataManager.saveData(data);
+            },
+            
+            // Definir livro atual
+            setCurrentBook: (id) => {
+                const data = DataManager.getData();
+                data.currentBook = id;
+                return DataManager.saveData(data);
+            },
+            
+            // Adicionar uma nova nota
+            addNote: (content, bookId) => {
+                if (!content || !content.trim()) {
+                    alert("Por favor, digite o conteúdo da nota");
+                    return false;
+                }
+                
+                const data = DataManager.getData();
+                const newNote = {
+                    id: Date.now(), // ID único baseado no timestamp
+                    content: content.trim(),
+                    date: DateUtils.getFormattedDate(),
+                    bookId: bookId || data.currentBook
+                };
+                
+                data.notes.unshift(newNote);
+                return DataManager.saveData(data);
+            },
+            
+            // Remover uma nota
+            removeNote: (id) => {
+                const data = DataManager.getData();
+                data.notes = data.notes.filter(note => note.id !== id);
+                return DataManager.saveData(data);
+            },
+            
+            // Atualizar uma nota
+            updateNote: (id, content, bookId) => {
+                const data = DataManager.getData();
+                const noteIndex = data.notes.findIndex(note => note.id === id);
+                
+                if (noteIndex === -1) return false;
+                
+                data.notes[noteIndex].content = content.trim();
+                data.notes[noteIndex].date = DateUtils.getFormattedDate();
+                data.notes[noteIndex].bookId = bookId || data.notes[noteIndex].bookId;
+                
+                return DataManager.saveData(data);
+            },
+            
+            // Obter notas do livro atual
+            getCurrentBookNotes: () => {
+                const data = DataManager.getData();
+                return data.notes.filter(note => note.bookId === data.currentBook);
+            },
+            
+            // Obter livro por ID
+            getBookById: (id) => {
+                const data = DataManager.getData();
+                return data.books.find(book => book.id === id);
+            }
+        };
+
+        // Utilitários de data
+        const DateUtils = {
+            getFormattedDate: () => {
+                const now = new Date();
+                const day = now.getDate().toString().padStart(2, '0');
+                const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                const year = now.getFullYear().toString().slice(-2);
+                return `${day}/${month}/${year}`;
+            }
+        };
+
+        // Interface do usuário
+        const UI = {
+            // Renderizar todos os livros
+            renderBooks: () => {
+                const data = DataManager.getData();
+                DOM.booksList.innerHTML = '';
+                
+                data.books.forEach(book => {
+                    const bookElement = document.createElement('li');
+                    bookElement.className = `book-item ${data.currentBook === book.id ? 'active' : ''}`;
+                    bookElement.setAttribute('data-id', book.id);
+                    
+                    bookElement.innerHTML = `
+                        <span>${book.name}</span>
+                        ${book.id !== 'default' ? `
+                            <div class="book-actions">
+                                <button class="btn-icon delete-book" aria-label="Excluir livro">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        ` : ''}
+                    `;
+                    
+                    // Adicionar event listeners
+                    bookElement.addEventListener('click', (e) => {
+                        if (!e.target.closest('.delete-book')) {
+                            DataManager.setCurrentBook(book.id);
+                            UI.renderBooks();
+                            UI.renderBookSelector();
+                            UI.renderNotes();
+                        }
+                    });
+                    
+                    // Adicionar event listener para o botão de excluir
+                    if (book.id !== 'default') {
+                        const deleteButton = bookElement.querySelector('.delete-book');
+                        deleteButton.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (confirm(`Tem certeza que deseja excluir o livro "${book.name}"?`)) {
+                                if (DataManager.removeBook(book.id)) {
+                                    UI.renderBooks();
+                                    UI.renderBookSelector();
+                                    UI.renderNotes();
+                                }
+                            }
+                        });
+                    }
+                    
+                    DOM.booksList.appendChild(bookElement);
+                });
+            },
+            
+            // Renderizar seletor de livros
+            renderBookSelector: () => {
+                const data = DataManager.getData();
+                DOM.bookSelector.innerHTML = '';
+                
+                data.books.forEach(book => {
+                    const option = document.createElement('option');
+                    option.value = book.id;
+                    option.textContent = book.name;
+                    option.selected = data.currentBook === book.id;
+                    DOM.bookSelector.appendChild(option);
+                });
+            },
+            
+            // Renderizar notas do livro atual
+            renderNotes: () => {
+                const notes = DataManager.getCurrentBookNotes();
+                DOM.notesContainer.innerHTML = '';
+                
+                if (notes.length === 0) {
+                    DOM.notesContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fa-regular fa-note-sticky"></i>
+                            <p>Nenhuma nota encontrada</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                notes.forEach(note => UI.createNoteElement(note));
+            },
+            
+            // Criar elemento de nota
+            createNoteElement: (note) => {
+                const noteElement = document.createElement('div');
+                noteElement.className = 'note-card';
+                noteElement.setAttribute('data-id', note.id);
+                
+                const book = DataManager.getBookById(note.bookId);
+                
+                noteElement.innerHTML = `
+                    <div class="note-header">
+                        <span class="note-date">${note.date}</span>
+                        <div class="note-actions">
+                            <button class="btn-icon edit-note" aria-label="Editar nota">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button class="btn-icon delete-note" aria-label="Excluir nota">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="note-content">${note.content}</div>
+                    ${book ? `<div class="note-book">Livro: ${book.name}</div>` : ''}
+                `;
+                
+                // Adicionar event listeners para os botões
+                const deleteButton = noteElement.querySelector('.delete-note');
+                const editButton = noteElement.querySelector('.edit-note');
+                
+                deleteButton.addEventListener('click', () => UI.handleDeleteNote(note.id));
+                editButton.addEventListener('click', () => UI.handleEditNote(note));
+                
+                DOM.notesContainer.appendChild(noteElement);
+            },
+            
+            // Manipular exclusão de nota
+            handleDeleteNote: (id) => {
+                if (confirm('Tem certeza que deseja excluir esta nota?')) {
+                    if (DataManager.removeNote(id)) {
+                        UI.renderNotes();
+                    } else {
+                        alert('Erro ao excluir a nota');
+                    }
+                }
+            },
+            
+            // Manipular edição de nota
+            handleEditNote: (note) => {
+                DOM.noteContent.value = note.content;
+                DOM.noteContent.focus();
+                
+                // Atualizar o seletor para o livro da nota
+                const data = DataManager.getData();
+                DOM.bookSelector.value = note.bookId;
+                
+                // Remover a nota antiga após edição
+                DOM.createNoteButton.onclick = () => {
+                    if (DataManager.updateNote(note.id, DOM.noteContent.value, DOM.bookSelector.value)) {
+                        UI.renderNotes();
+                        DOM.noteContent.value = '';
+                        DOM.bookSelector.value = data.currentBook;
+                        // Restaurar o comportamento padrão do botão
+                        DOM.createNoteButton.onclick = UI.handleCreateNote;
+                    }
+                };
+            },
+            
+            // Manipular criação de nota
+            handleCreateNote: () => {
+                if (DataManager.addNote(DOM.noteContent.value, DOM.bookSelector.value)) {
+                    UI.renderNotes();
+                    DOM.noteContent.value = '';
+                }
+            },
+            
+            // Abrir modal para adicionar livro
+            openBookModal: () => {
+                DOM.bookModal.style.display = 'flex';
+                DOM.bookNameInput.value = '';
+                DOM.bookNameInput.focus();
+            },
+            
+            // Fechar modal
+            closeBookModal: () => {
+                DOM.bookModal.style.display = 'none';
+            },
+            
+            // Salvar novo livro
+            saveNewBook: () => {
+                if (DataManager.addBook(DOM.bookNameInput.value)) {
+                    UI.renderBooks();
+                    UI.renderBookSelector();
+                    UI.closeBookModal();
+                }
+            },
+            
+            // Inicializar a interface
+            init: () => {
+                UI.renderBooks();
+                UI.renderBookSelector();
+                UI.renderNotes();
+                
+                // Event listeners
+                DOM.createNoteButton.addEventListener('click', UI.handleCreateNote);
+                
+                DOM.addBookBtn.addEventListener('click', UI.openBookModal);
+                DOM.closeModal.addEventListener('click', UI.closeBookModal);
+                DOM.saveBookBtn.addEventListener('click', UI.saveNewBook);
+                
+                // Fechar modal clicando fora dele
+                window.addEventListener('click', (e) => {
+                    if (e.target === DOM.bookModal) {
+                        UI.closeBookModal();
+                    }
+                });
+                
+                // Permitir criar nota com Ctrl+Enter
+                DOM.noteContent.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'Enter') {
+                        UI.handleCreateNote();
+                    }
+                });
+                
+                // Permitir salvar livro com Enter
+                DOM.bookNameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        UI.saveNewBook();
+                    }
+                });
+            }
+        };
+
+        // Inicializar a aplicação quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', UI.init);
+    </script>
+</body>
 </html>
