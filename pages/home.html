@@ -139,6 +139,8 @@
             border-radius: 5px;
             resize: vertical;
             font-size: 1rem;
+            font-family: monospace;
+            white-space: pre-wrap;
         }
 
         .editor-actions {
@@ -207,6 +209,8 @@
         .note-content {
             margin-bottom: 10px;
             line-height: 1.5;
+            white-space: pre-wrap;
+            font-family: monospace;
         }
 
         .note-book {
@@ -271,6 +275,52 @@
             border-radius: 5px;
             margin-bottom: 15px;
             font-size: 1rem;
+        }
+
+        /* Estilos para o modo de edição */
+        .note-card.editing {
+            background-color: #f0f7ff;
+            border-left: 4px solid #4a90e2;
+        }
+
+        .edit-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            font-size: 0.9rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-bottom: 10px;
+        }
+
+        .edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
         }
 
         @media (max-width: 768px) {
@@ -663,23 +713,53 @@
             
             // Manipular edição de nota
             handleEditNote: (note) => {
-                DOM.noteContent.value = note.content;
-                DOM.noteContent.focus();
+                // Encontrar o elemento da nota
+                const noteElement = document.querySelector(`.note-card[data-id="${note.id}"]`);
                 
-                // Atualizar o seletor para o livro da nota
-                const data = DataManager.getData();
-                DOM.bookSelector.value = note.bookId;
+                // Adicionar classe de edição para estilização
+                noteElement.classList.add('editing');
                 
-                // Remover a nota antiga após edição
-                DOM.createNoteButton.onclick = () => {
-                    if (DataManager.updateNote(note.id, DOM.noteContent.value, DOM.bookSelector.value)) {
+                // Salvar o conteúdo atual para possível cancelamento
+                const originalContent = noteElement.querySelector('.note-content').textContent;
+                
+                // Substituir o conteúdo por um textarea
+                noteElement.querySelector('.note-content').innerHTML = `
+                    <textarea class="edit-textarea">${originalContent}</textarea>
+                    <div class="edit-actions">
+                        <button class="btn-secondary cancel-edit">Cancelar</button>
+                        <button class="btn-success save-edit">Salvar</button>
+                    </div>
+                `;
+                
+                const textarea = noteElement.querySelector('.edit-textarea');
+                const cancelButton = noteElement.querySelector('.cancel-edit');
+                const saveButton = noteElement.querySelector('.save-edit');
+                
+                // Focar no textarea e colocar o cursor no final
+                textarea.focus();
+                textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                
+                // Evento para cancelar a edição
+                cancelButton.addEventListener('click', () => {
+                    noteElement.querySelector('.note-content').innerHTML = originalContent;
+                    noteElement.classList.remove('editing');
+                });
+                
+                // Evento para salvar a edição
+                saveButton.addEventListener('click', () => {
+                    if (DataManager.updateNote(note.id, textarea.value)) {
                         UI.renderNotes();
-                        DOM.noteContent.value = '';
-                        DOM.bookSelector.value = data.currentBook;
-                        // Restaurar o comportamento padrão do botão
-                        DOM.createNoteButton.onclick = UI.handleCreateNote;
                     }
-                };
+                });
+                
+                // Permitir salvar com Ctrl+Enter
+                textarea.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'Enter') {
+                        if (DataManager.updateNote(note.id, textarea.value)) {
+                            UI.renderNotes();
+                        }
+                    }
+                });
             },
             
             // Manipular criação de nota
