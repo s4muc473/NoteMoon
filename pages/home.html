@@ -348,6 +348,7 @@
     <div class="app-container">
         <header class="app-header">
             <h1 class="logo">NoteMoon</h1>
+            <p>Organize suas notas de forma simples e eficiente</p>
         </header>
         
         <main class="app-main">
@@ -412,166 +413,16 @@
     </div>
 
     <script>
-        // Constantes e configuração
-        const STORAGE_KEY = 'NOTEMOON_DATA';
-
-        // Elementos da DOM
-        const DOM = {
-            notesContainer: document.getElementById('notes-container'),
-            noteContent: document.getElementById('note-content'),
-            createNoteButton: document.getElementById('create-note'),
-            booksList: document.getElementById('books-list'),
-            bookSelector: document.getElementById('book-selector'),
-            addBookBtn: document.getElementById('add-book-btn'),
-            bookModal: document.getElementById('book-modal'),
-            closeModal: document.getElementById('close-modal'),
-            saveBookBtn: document.getElementById('save-book'),
-            bookNameInput: document.getElementById('book-name')
-        };
-
-        // Gerenciamento de dados
-        const DataManager = {
-            // Obter dados do localStorage
-            getData: () => {
-                try {
-                    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-                        books: [{ id: 'default', name: 'Notas Gerais' }],
-                        notes: [],
-                        currentBook: 'default'
-                    };
-                } catch (error) {
-                    console.error('Erro ao carregar dados:', error);
-                    return {
-                        books: [{ id: 'default', name: 'Notas Gerais' }],
-                        notes: [],
-                        currentBook: 'default'
-                    };
-                }
-            },
-            
-            // Salvar dados no localStorage
-            saveData: (data) => {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                    return true;
-                } catch (error) {
-                    console.error('Erro ao salvar dados:', error);
-                    return false;
-                }
-            },
-            
-            // Adicionar um novo livro
-            addBook: (name) => {
-                if (!name || !name.trim()) {
-                    alert("Por favor, digite um nome para o livro");
-                    return false;
-                }
-                
-                const data = DataManager.getData();
-                const newBook = {
-                    id: Date.now().toString(),
-                    name: name.trim()
-                };
-                
-                data.books.push(newBook);
-                return DataManager.saveData(data);
-            },
-            
-            // Remover um livro
-            removeBook: (id) => {
-                if (id === 'default') {
-                    alert("Não é possível remover o livro 'Notas Gerais'");
-                    return false;
-                }
-                
-                const data = DataManager.getData();
-                
-                // Remover o livro
-                data.books = data.books.filter(book => book.id !== id);
-                
-                // Mover notas para o livro padrão se estiver removendo o livro atual
-                if (data.currentBook === id) {
-                    data.notes = data.notes.map(note => {
-                        if (note.bookId === id) {
-                            return {...note, bookId: 'default'};
-                        }
-                        return note;
-                    });
-                    data.currentBook = 'default';
-                } else {
-                    // Mover notas para o livro padrão
-                    data.notes = data.notes.map(note => {
-                        if (note.bookId === id) {
-                            return {...note, bookId: 'default'};
-                        }
-                        return note;
-                    });
-                }
-                
-                return DataManager.saveData(data);
-            },
-            
-            // Definir livro atual
-            setCurrentBook: (id) => {
-                const data = DataManager.getData();
-                data.currentBook = id;
-                return DataManager.saveData(data);
-            },
-            
-            // Adicionar uma nova nota
-            addNote: (content, bookId) => {
-                if (!content || !content.trim()) {
-                    alert("Por favor, digite o conteúdo da nota");
-                    return false;
-                }
-                
-                const data = DataManager.getData();
-                const newNote = {
-                    id: Date.now(), // ID único baseado no timestamp
-                    content: content.trim(),
-                    date: DateUtils.getFormattedDate(),
-                    bookId: bookId || data.currentBook
-                };
-                
-                data.notes.unshift(newNote);
-                return DataManager.saveData(data);
-            },
-            
-            // Remover uma nota
-            removeNote: (id) => {
-                const data = DataManager.getData();
-                data.notes = data.notes.filter(note => note.id !== id);
-                return DataManager.saveData(data);
-            },
-            
-            // Atualizar uma nota
-            updateNote: (id, content, bookId) => {
-                const data = DataManager.getData();
-                const noteIndex = data.notes.findIndex(note => note.id === id);
-                
-                if (noteIndex === -1) return false;
-                
-                data.notes[noteIndex].content = content.trim();
-                data.notes[noteIndex].date = DateUtils.getFormattedDate();
-                data.notes[noteIndex].bookId = bookId || data.notes[noteIndex].bookId;
-                
-                return DataManager.saveData(data);
-            },
-            
-            // Obter notas do livro atual
-            getCurrentBookNotes: () => {
-                const data = DataManager.getData();
-                return data.notes.filter(note => note.bookId === data.currentBook);
-            },
-            
-            // Obter livro por ID
-            getBookById: (id) => {
-                const data = DataManager.getData();
-                return data.books.find(book => book.id === id);
+        // Módulo de Constantes
+        const Constants = {
+            STORAGE_KEY: 'NOTEMOON_DATA',
+            DEFAULT_BOOK: {
+                id: 'default', 
+                name: 'Notas Gerais'
             }
         };
 
-        // Utilitários de data
+        // Módulo de Utilitários
         const DateUtils = {
             getFormattedDate: () => {
                 const now = new Date();
@@ -582,21 +433,189 @@
             }
         };
 
-        // Interface do usuário
-        const UI = {
-            // Renderizar todos os livros
-            renderBooks: () => {
-                const data = DataManager.getData();
-                DOM.booksList.innerHTML = '';
+        // Módulo de Gerenciamento de Dados
+        class DataManager {
+            constructor() {
+                this.init();
+            }
+            
+            init() {
+                if (!this.getData()) {
+                    this.saveData({
+                        books: [Constants.DEFAULT_BOOK],
+                        notes: [],
+                        currentBook: Constants.DEFAULT_BOOK.id
+                    });
+                }
+            }
+            
+            getData() {
+                try {
+                    return JSON.parse(localStorage.getItem(Constants.STORAGE_KEY)) || null;
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    return null;
+                }
+            }
+            
+            saveData(data) {
+                try {
+                    localStorage.setItem(Constants.STORAGE_KEY, JSON.stringify(data));
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao salvar dados:', error);
+                    return false;
+                }
+            }
+            
+            addBook(name) {
+                if (!name || !name.trim()) {
+                    throw new Error("Por favor, digite um nome para o livro");
+                }
                 
-                data.books.forEach(book => {
+                const data = this.getData();
+                const newBook = {
+                    id: Date.now().toString(),
+                    name: name.trim()
+                };
+                
+                data.books.push(newBook);
+                return this.saveData(data);
+            }
+            
+            removeBook(id) {
+                if (id === Constants.DEFAULT_BOOK.id) {
+                    throw new Error("Não é possível remover o livro padrão");
+                }
+                
+                const data = this.getData();
+                
+                // Remover o livro
+                data.books = data.books.filter(book => book.id !== id);
+                
+                // Mover notas para o livro padrão
+                data.notes = data.notes.map(note => {
+                    if (note.bookId === id) {
+                        return {...note, bookId: Constants.DEFAULT_BOOK.id};
+                    }
+                    return note;
+                });
+                
+                // Se estiver removendo o livro atual, mudar para o padrão
+                if (data.currentBook === id) {
+                    data.currentBook = Constants.DEFAULT_BOOK.id;
+                }
+                
+                return this.saveData(data);
+            }
+            
+            setCurrentBook(id) {
+                const data = this.getData();
+                data.currentBook = id;
+                return this.saveData(data);
+            }
+            
+            addNote(content, bookId) {
+                if (!content || !content.trim()) {
+                    throw new Error("Por favor, digite o conteúdo da nota");
+                }
+                
+                const data = this.getData();
+                const newNote = {
+                    id: Date.now(),
+                    content: content.trim(),
+                    date: DateUtils.getFormattedDate(),
+                    bookId: bookId || data.currentBook
+                };
+                
+                data.notes.unshift(newNote);
+                return this.saveData(data);
+            }
+            
+            removeNote(id) {
+                const data = this.getData();
+                data.notes = data.notes.filter(note => note.id !== id);
+                return this.saveData(data);
+            }
+            
+            updateNote(id, content, bookId) {
+                const data = this.getData();
+                const noteIndex = data.notes.findIndex(note => note.id === id);
+                
+                if (noteIndex === -1) return false;
+                
+                data.notes[noteIndex].content = content.trim();
+                data.notes[noteIndex].date = DateUtils.getFormattedDate();
+                
+                if (bookId) {
+                    data.notes[noteIndex].bookId = bookId;
+                }
+                
+                return this.saveData(data);
+            }
+            
+            getCurrentBookNotes() {
+                const data = this.getData();
+                return data.notes.filter(note => note.bookId === data.currentBook);
+            }
+            
+            getBookById(id) {
+                const data = this.getData();
+                return data.books.find(book => book.id === id);
+            }
+            
+            getAllBooks() {
+                const data = this.getData();
+                return data.books;
+            }
+            
+            getCurrentBookId() {
+                const data = this.getData();
+                return data.currentBook;
+            }
+        }
+
+        // Módulo de Interface do Usuário
+        class UI {
+            constructor(dataManager) {
+                this.dataManager = dataManager;
+                this.domElements = {
+                    notesContainer: document.getElementById('notes-container'),
+                    noteContent: document.getElementById('note-content'),
+                    createNoteButton: document.getElementById('create-note'),
+                    booksList: document.getElementById('books-list'),
+                    bookSelector: document.getElementById('book-selector'),
+                    addBookBtn: document.getElementById('add-book-btn'),
+                    bookModal: document.getElementById('book-modal'),
+                    closeModal: document.getElementById('close-modal'),
+                    saveBookBtn: document.getElementById('save-book'),
+                    bookNameInput: document.getElementById('book-name')
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                this.renderBooks();
+                this.renderBookSelector();
+                this.renderNotes();
+                this.setupEventListeners();
+            }
+            
+            renderBooks() {
+                const books = this.dataManager.getAllBooks();
+                const currentBookId = this.dataManager.getCurrentBookId();
+                
+                this.domElements.booksList.innerHTML = '';
+                
+                books.forEach(book => {
                     const bookElement = document.createElement('li');
-                    bookElement.className = `book-item ${data.currentBook === book.id ? 'active' : ''}`;
+                    bookElement.className = `book-item ${currentBookId === book.id ? 'active' : ''}`;
                     bookElement.setAttribute('data-id', book.id);
                     
                     bookElement.innerHTML = `
                         <span>${book.name}</span>
-                        ${book.id !== 'default' ? `
+                        ${book.id !== Constants.DEFAULT_BOOK.id ? `
                             <div class="book-actions">
                                 <button class="btn-icon delete-book" aria-label="Excluir livro">
                                     <i class="fa-solid fa-trash"></i>
@@ -608,53 +627,57 @@
                     // Adicionar event listeners
                     bookElement.addEventListener('click', (e) => {
                         if (!e.target.closest('.delete-book')) {
-                            DataManager.setCurrentBook(book.id);
-                            UI.renderBooks();
-                            UI.renderBookSelector();
-                            UI.renderNotes();
+                            this.dataManager.setCurrentBook(book.id);
+                            this.renderBooks();
+                            this.renderBookSelector();
+                            this.renderNotes();
                         }
                     });
                     
                     // Adicionar event listener para o botão de excluir
-                    if (book.id !== 'default') {
+                    if (book.id !== Constants.DEFAULT_BOOK.id) {
                         const deleteButton = bookElement.querySelector('.delete-book');
                         deleteButton.addEventListener('click', (e) => {
                             e.stopPropagation();
                             if (confirm(`Tem certeza que deseja excluir o livro "${book.name}"?`)) {
-                                if (DataManager.removeBook(book.id)) {
-                                    UI.renderBooks();
-                                    UI.renderBookSelector();
-                                    UI.renderNotes();
+                                try {
+                                    if (this.dataManager.removeBook(book.id)) {
+                                        this.renderBooks();
+                                        this.renderBookSelector();
+                                        this.renderNotes();
+                                    }
+                                } catch (error) {
+                                    alert(error.message);
                                 }
                             }
                         });
                     }
                     
-                    DOM.booksList.appendChild(bookElement);
+                    this.domElements.booksList.appendChild(bookElement);
                 });
-            },
+            }
             
-            // Renderizar seletor de livros
-            renderBookSelector: () => {
-                const data = DataManager.getData();
-                DOM.bookSelector.innerHTML = '';
+            renderBookSelector() {
+                const books = this.dataManager.getAllBooks();
+                const currentBookId = this.dataManager.getCurrentBookId();
                 
-                data.books.forEach(book => {
+                this.domElements.bookSelector.innerHTML = '';
+                
+                books.forEach(book => {
                     const option = document.createElement('option');
                     option.value = book.id;
                     option.textContent = book.name;
-                    option.selected = data.currentBook === book.id;
-                    DOM.bookSelector.appendChild(option);
+                    option.selected = currentBookId === book.id;
+                    this.domElements.bookSelector.appendChild(option);
                 });
-            },
+            }
             
-            // Renderizar notas do livro atual
-            renderNotes: () => {
-                const notes = DataManager.getCurrentBookNotes();
-                DOM.notesContainer.innerHTML = '';
+            renderNotes() {
+                const notes = this.dataManager.getCurrentBookNotes();
+                this.domElements.notesContainer.innerHTML = '';
                 
                 if (notes.length === 0) {
-                    DOM.notesContainer.innerHTML = `
+                    this.domElements.notesContainer.innerHTML = `
                         <div class="empty-state">
                             <i class="fa-regular fa-note-sticky"></i>
                             <p>Nenhuma nota encontrada</p>
@@ -663,16 +686,15 @@
                     return;
                 }
                 
-                notes.forEach(note => UI.createNoteElement(note));
-            },
+                notes.forEach(note => this.createNoteElement(note));
+            }
             
-            // Criar elemento de nota
-            createNoteElement: (note) => {
+            createNoteElement(note) {
                 const noteElement = document.createElement('div');
                 noteElement.className = 'note-card';
                 noteElement.setAttribute('data-id', note.id);
                 
-                const book = DataManager.getBookById(note.bookId);
+                const book = this.dataManager.getBookById(note.bookId);
                 
                 noteElement.innerHTML = `
                     <div class="note-header">
@@ -694,25 +716,23 @@
                 const deleteButton = noteElement.querySelector('.delete-note');
                 const editButton = noteElement.querySelector('.edit-note');
                 
-                deleteButton.addEventListener('click', () => UI.handleDeleteNote(note.id));
-                editButton.addEventListener('click', () => UI.handleEditNote(note));
+                deleteButton.addEventListener('click', () => this.handleDeleteNote(note.id));
+                editButton.addEventListener('click', () => this.handleEditNote(note));
                 
-                DOM.notesContainer.appendChild(noteElement);
-            },
+                this.domElements.notesContainer.appendChild(noteElement);
+            }
             
-            // Manipular exclusão de nota
-            handleDeleteNote: (id) => {
+            handleDeleteNote(id) {
                 if (confirm('Tem certeza que deseja excluir esta nota?')) {
-                    if (DataManager.removeNote(id)) {
-                        UI.renderNotes();
+                    if (this.dataManager.removeNote(id)) {
+                        this.renderNotes();
                     } else {
                         alert('Erro ao excluir a nota');
                     }
                 }
-            },
+            }
             
-            // Manipular edição de nota
-            handleEditNote: (note) => {
+            handleEditNote(note) {
                 // Encontrar o elemento da nota
                 const noteElement = document.querySelector(`.note-card[data-id="${note.id}"]`);
                 
@@ -747,88 +767,99 @@
                 
                 // Evento para salvar a edição
                 saveButton.addEventListener('click', () => {
-                    if (DataManager.updateNote(note.id, textarea.value)) {
-                        UI.renderNotes();
+                    if (this.dataManager.updateNote(note.id, textarea.value)) {
+                        this.renderNotes();
                     }
                 });
                 
                 // Permitir salvar com Ctrl+Enter
                 textarea.addEventListener('keydown', (e) => {
                     if (e.ctrlKey && e.key === 'Enter') {
-                        if (DataManager.updateNote(note.id, textarea.value)) {
-                            UI.renderNotes();
+                        if (this.dataManager.updateNote(note.id, textarea.value)) {
+                            this.renderNotes();
                         }
                     }
                 });
-            },
+            }
             
-            // Manipular criação de nota
-            handleCreateNote: () => {
-                if (DataManager.addNote(DOM.noteContent.value, DOM.bookSelector.value)) {
-                    UI.renderNotes();
-                    DOM.noteContent.value = '';
+            handleCreateNote() {
+                try {
+                    if (this.dataManager.addNote(
+                        this.domElements.noteContent.value, 
+                        this.domElements.bookSelector.value
+                    )) {
+                        this.renderNotes();
+                        this.domElements.noteContent.value = '';
+                    }
+                } catch (error) {
+                    alert(error.message);
                 }
-            },
+            }
             
-            // Abrir modal para adicionar livro
-            openBookModal: () => {
-                DOM.bookModal.style.display = 'flex';
-                DOM.bookNameInput.value = '';
-                DOM.bookNameInput.focus();
-            },
+            openBookModal() {
+                this.domElements.bookModal.style.display = 'flex';
+                this.domElements.bookNameInput.value = '';
+                this.domElements.bookNameInput.focus();
+            }
             
-            // Fechar modal
-            closeBookModal: () => {
-                DOM.bookModal.style.display = 'none';
-            },
+            closeBookModal() {
+                this.domElements.bookModal.style.display = 'none';
+            }
             
-            // Salvar novo livro
-            saveNewBook: () => {
-                if (DataManager.addBook(DOM.bookNameInput.value)) {
-                    UI.renderBooks();
-                    UI.renderBookSelector();
-                    UI.closeBookModal();
+            saveNewBook() {
+                try {
+                    if (this.dataManager.addBook(this.domElements.bookNameInput.value)) {
+                        this.renderBooks();
+                        this.renderBookSelector();
+                        this.closeBookModal();
+                    }
+                } catch (error) {
+                    alert(error.message);
                 }
-            },
+            }
             
-            // Inicializar a interface
-            init: () => {
-                UI.renderBooks();
-                UI.renderBookSelector();
-                UI.renderNotes();
-                
+            setupEventListeners() {
                 // Event listeners
-                DOM.createNoteButton.addEventListener('click', UI.handleCreateNote);
+                this.domElements.createNoteButton.addEventListener('click', () => this.handleCreateNote());
                 
-                DOM.addBookBtn.addEventListener('click', UI.openBookModal);
-                DOM.closeModal.addEventListener('click', UI.closeBookModal);
-                DOM.saveBookBtn.addEventListener('click', UI.saveNewBook);
+                this.domElements.addBookBtn.addEventListener('click', () => this.openBookModal());
+                this.domElements.closeModal.addEventListener('click', () => this.closeBookModal());
+                this.domElements.saveBookBtn.addEventListener('click', () => this.saveNewBook());
                 
                 // Fechar modal clicando fora dele
                 window.addEventListener('click', (e) => {
-                    if (e.target === DOM.bookModal) {
-                        UI.closeBookModal();
+                    if (e.target === this.domElements.bookModal) {
+                        this.closeBookModal();
                     }
                 });
                 
                 // Permitir criar nota com Ctrl+Enter
-                DOM.noteContent.addEventListener('keydown', (e) => {
+                this.domElements.noteContent.addEventListener('keydown', (e) => {
                     if (e.ctrlKey && e.key === 'Enter') {
-                        UI.handleCreateNote();
+                        this.handleCreateNote();
                     }
                 });
                 
                 // Permitir salvar livro com Enter
-                DOM.bookNameInput.addEventListener('keydown', (e) => {
+                this.domElements.bookNameInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
-                        UI.saveNewBook();
+                        this.saveNewBook();
                     }
                 });
             }
-        };
+        }
 
         // Inicializar a aplicação quando o DOM estiver carregado
-        document.addEventListener('DOMContentLoaded', UI.init);
+        document.addEventListener('DOMContentLoaded', () => {
+            const dataManager = new DataManager();
+            const ui = new UI(dataManager);
+            
+            // Tornar acessível para debugging (apenas desenvolvimento)
+            window.app = {
+                dataManager,
+                ui
+            };
+        });
     </script>
 </body>
 </html>
